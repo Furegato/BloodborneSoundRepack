@@ -417,21 +417,28 @@ function Start-NewJob {
             $wavFile = Join-Path $subFolder "$name.wav"
             
             # Execute the vgmstream command
-            $vgmstreamCommand = "$vgmstream_cli -s $index `"$fsbFile`" -o `"$wavFile`""
+            $vgmstreamCommand = "& `"$vgmstream_cli`" -s $index `"$fsbFile`" -o `"$wavFile`""
+            Write-Host "Executing VGMStream SubJob Command: $vgmstreamCommand"
+            Write-Host ""
             Invoke-Expression $vgmstreamCommand | Out-Null
 
             Write-Host "Successfully Extracted $wavFile"
+            Write-Host ""
+            Write-Host ""
         }
 
         # Repack OGG to FSB
         $outputFSB = Join-Path $FSBoutputPathTemp ($baseFileName + ".fsb")
-        $finalCommand = "$FmodBankToolPath -o $outputFSB $baseFolder -format vorbis -quality 50 -recursive -verbosity 0 -cache_dir $DataCache"
+        $finalCommand = "& `"$FmodBankToolPath`" -o `"$outputFSB`" `"$baseFolder`" -format vorbis -quality 50 -recursive -verbosity 0 -cache_dir `"$DataCache`""
+        Write-Host "Executing Job Fmod Command: $finalCommand"
+        Write-Host ""
         Invoke-Expression $finalCommand
 
         # Move all files from the source folder to the destination folder      
-        Move-Item -Path $outputFSB -Destination $FSBoutputPath -Force
+        Move-Item -Path "$outputFSB" -Destination "$FSBoutputPath" -Force
 
         Write-Host "Successfully Repacked: $baseFileName to $baseFolder.fsb"
+        Write-Host ""
         Write-Host ""
 
         # Delete the wav file after conversion

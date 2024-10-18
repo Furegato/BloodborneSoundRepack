@@ -2,7 +2,7 @@
 This script Extracts and Repacks Bloodborne sound files so that ShadPS4 is able play them. (for now, AT9 encoded sound files cannot be played)
 
 Just unpack it and run the AutoRepack.ps1 Powershell Script. (Right-Click then "Run with Powershell")
-If a "Security Warning" pop up, **UNCHECK* "Always ask before opening this file", and click "Open".
+If a "Security Warning" pop up, __UNCHECK__ "Always ask before opening this file", and click "Open".
 
 If it's failing, try AutoRepack_Admin.ps1 which will resolve system permission problems.
 

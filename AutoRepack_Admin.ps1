@@ -15,11 +15,9 @@ Add-Type -AssemblyName System.Drawing
 # Get the current script directory
 $currentDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 Write-Host "Current Execution Directory is: $currentDir"
+Write-Host ""
 
-# Define the path to test
-#$currentDir = ""  # Replace this with your actual path
-
-# Function to check if a path is valid
+# Function to check if a $currentDir path is valid
 function Test-PathValidity {
     param(
         [string]$path
@@ -53,8 +51,6 @@ if (-not (Test-PathValidity $currentDir)) {
     # If invalid, set $currentDir to C:\
     Write-Host "Setting default path to C:\"
     $currentDir = "C:\"
-} else {
-    Write-Host "Path is valid: $currentDir"
 }
 
 # Function to select the folder containing .fsb files
@@ -149,6 +145,10 @@ Write-Host ""
 
 # Check for .fsb files in the selected folder
 Check-FsbFiles -folder $fsb_folder
+$fsb_count = Get-ChildItem -Path $fsb_folder -Filter "*.fsb"
+$fsb_count = $fsb_count.Count
+Write-Host "Found $fsb_count .fsb file(s) in folder '$fsb_folder'."
+Write-Host ""
 
 # Define the expected path for the vgmstream-cli.exe executable
 $vgmstream_cli_path = Join-Path "$currentDir" "\vgmstream-win64\vgmstream-cli.exe"
@@ -393,7 +393,7 @@ function Start-NewJob {
     }
 
     $job = Start-Job -ScriptBlock {
-        param ($vgmstream_cli, $fsbFile, $oggenc2_exe, $converted_folder, $baseFileName, $FSBoutputPath, $DataCache, $FmodBankToolPath, $FSBoutputPathTemp)
+        param ($vgmstream_cli, $fsbFile, $oggenc2_exe, $converted_folder, $baseFileName, $FSBoutputPath, $DataCache, $FmodBankToolPath, $FSBoutputPathTemp, $maxConcurrentJobs)
         
         Write-Host "Processing $fsbFile..."
 
@@ -432,30 +432,39 @@ function Start-NewJob {
             Write-Host ""
             Invoke-Expression $vgmstreamCommand | Out-Null
 
-            Write-Host "Successfully Extracted $wavFile"
+            Write-Host "Successfully EXTRACTED $wavFile"
             Write-Host ""
             Write-Host ""
         }
 
         # Repack OGG to FSB
         $outputFSB = Join-Path $FSBoutputPathTemp ($baseFileName + ".fsb")
-        $finalCommand = "& `"$FmodBankToolPath`" -o `"$outputFSB`" `"$baseFolder`" -format vorbis -quality 50 -recursive -verbosity 0 -cache_dir `"$DataCache`""
+        $finalCommand = "& `"$FmodBankToolPath`" -o `"$outputFSB`" `"$baseFolder`" -thread_count $maxConcurrentJobs -format vorbis -quality 50 -recursive -verbosity 0 -cache_dir `"$DataCache`""
         Write-Host "Executing Job Fmod Command: $finalCommand"
         Write-Host ""
         Invoke-Expression $finalCommand
 
+        # Check if the $outputFSB file was created or not (failed)
+        if (-Not (Test-Path $outputFSB)) {
+            # File does not exist, so invoke the command
+            $finalCommand = "& `"$FmodBankToolPath`" -o `"$outputFSB`" `"$baseFolder`" -thread_count 1 -format vorbis -quality 50 -recursive -verbosity 0 -cache_dir `"$DataCache`""
+            Write-Host "FBS file not found. Executing the Reduced Threads Fmod Command: $finalCommand"
+            Invoke-Expression $finalCommand
+        }
+        
         # Move all files from the source folder to the destination folder      
         Move-Item -Path "$outputFSB" -Destination "$FSBoutputPath" -Force
 
-        Write-Host "Successfully Repacked: $baseFileName to $baseFolder.fsb"
         Write-Host ""
+        Write-Host "Successfully REPACKED: $baseFileName to $baseFolder.fsb"
         Write-Host ""
 
         # Delete the wav file after conversion
         Remove-Item -Path $baseFolder -Recurse -Force
-        Write-Host "Deleted temporary $baseFolder"
+        Write-Host "Deleted temporary folder: $baseFolder"
+        Write-Host ""
 
-    } -ArgumentList $vgmstream_cli, $fsbFile, $oggenc2_exe, $converted_folder, $baseFileName, $FSBoutputPath, $DataCache, $FmodBankToolPath, $FSBoutputPathTemp
+    } -ArgumentList $vgmstream_cli, $fsbFile, $oggenc2_exe, $converted_folder, $baseFileName, $FSBoutputPath, $DataCache, $FmodBankToolPath, $FSBoutputPathTemp, $maxConcurrentJobs
 
     [void]$jobs.Add($job)
 }
@@ -481,7 +490,9 @@ while ($fileIndex -lt $fsbFiles.Count -or $jobs.Count -gt 0) {
     foreach ($completedJob in $completedJobs) {
         $jobs.Remove($completedJob) | Out-Null
         $jobResult = Receive-Job -Job $completedJob
-        Write-Host "Job completed: $($completedJob.Id)"
+        $idjob = ($completedJob.Id+1)/2
+        Write-Host ""
+        Write-Host "JOB COMPLETED: $($idjob)"
         Write-Host ""
     }
 }
@@ -494,6 +505,11 @@ Remove-Item -Path "$FSBoutputPathTemp" -Recurse -Force
 # Record the end time
 $endTime = Get-Date
 $duration = $endTime - $startTime
+
+# Count How many FSB files were created against how many were found initially
+$repackedfsb_count = Get-ChildItem -Path $FSBoutputPath -Filter "*.fsb"
+$repackedfsb_count = $repackedfsb_count.Count
+Write-Host "Repacked "$repackedfsb_count" out of "$fsb_count" .fbs files found"
 
 # Print completion message to the terminal
 Write-Host `n`n"REPACKING COMPLETED! The repacked files can be found in: $FSBoutputPath"

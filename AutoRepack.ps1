@@ -429,7 +429,7 @@ function Start-NewJob {
 
         # Repack OGG to FSB
         $outputFSB = Join-Path $FSBoutputPathTemp ($baseFileName + ".fsb")
-        $finalCommand = "& `"$FmodBankToolPath`" -o `"$outputFSB`" `"$baseFolder`" -thread_count $maxConcurrentJobs -format vorbis -quality 50 -recursive -verbosity 0 -cache_dir `"$DataCache`""
+        $finalCommand = "& `"$FmodBankToolPath`" -o `"$outputFSB`" `"$baseFolder`" -format vorbis -quality 50 -recursive -verbosity 0 -cache_dir `"$DataCache`""
         Write-Host "Executing Job Fmod Command: $finalCommand"
         Write-Host ""
         Invoke-Expression $finalCommand

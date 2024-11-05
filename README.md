@@ -15,4 +15,4 @@ If you want more detail, there is this [Google Docs Guide](https://docs.google.c
 
 It has more details and some images to help if needed.
 
-If you are looking for a **Linux** version, follow this link to Az’s [GitHub repack Linux script](https://github.com/ItsAzM8/bloodborne-sound-repack-linux).
+If you are looking for a **Linux** version, follow this link to Az’s [GitHub Bloddborne sound repack Linux script](https://github.com/ItsAzM8/bloodborne-sound-repack-linux).

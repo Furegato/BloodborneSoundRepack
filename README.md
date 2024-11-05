@@ -14,3 +14,5 @@ This script can be "resumed" if it crashes or you stop it you can just rerun the
 If you want more detail, there is this [Google Docs Guide](https://docs.google.com/document/d/e/2PACX-1vRyZW18yDhWC3VmTGkfXCronfiEJxJ31zbsitic7QoBq7hIYB5pfF40N-QH7qToF47sTu1UHcFhBEhH/pub) 
 
 It has more details and some images to help if needed.
+
+If you are looking for a **Linux** version, follow this link to Az’s [GitHub repack Linux script](https://github.com/ItsAzM8/bloodborne-sound-repack-linux).
